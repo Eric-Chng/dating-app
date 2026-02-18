@@ -606,11 +606,11 @@ function normalizeReferralCode(rawValue) {
   if (!rawValue) {
     return null;
   }
-  const trimmed = rawValue.trim();
-  if (!trimmed) {
+  const normalized = rawValue.trim().replace(/\s+/g, " ");
+  if (!normalized) {
     return null;
   }
-  return /^[a-z0-9._-]{1,40}$/i.test(trimmed) ? trimmed : null;
+  return /^[a-z0-9._ -]{1,40}$/i.test(normalized) ? normalized : null;
 }
 
 function isMissingReferralColumnError(error) {

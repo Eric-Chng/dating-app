@@ -50,6 +50,10 @@ Share links like:
 
 `https://<your-username>.github.io/<repo-name>/?ref=friend123`
 
+Spaces are supported. URL-encode them as `%20`:
+
+`https://<your-username>.github.io/<repo-name>/?ref=Melanie%20Toh`
+
 When a visitor opens the link:
 
 - They get a popup: "You've been referred to DateEric by friend123."
@@ -74,7 +78,10 @@ Then visit `http://localhost:8080`.
 5. Save.
 
 After deploy, your site is live at
-`https://<your-username>.github.io/<repo-name>/`.
+`https://eric-chng.github.io/dating-app/`.
+
+For a referral link:
+`https://eric-chng.github.io/dating-app/?ref=first%20second`
 
 ## Notes on spam and privacy
 
