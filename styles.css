@@ -379,6 +379,10 @@ body.modal-open {
   padding: 1rem;
 }
 
+.referral-modal.hidden {
+  display: none;
+}
+
 .referral-modal-card {
   width: min(420px, 100%);
   background: #020617;
