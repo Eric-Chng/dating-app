@@ -20,7 +20,7 @@ export const PROFILES = [
   {
     id: "me-004",
     name: "friends.jpg",
-    bio: "here's a nice photo i took of my friends",
+    bio: "here's a nice photo of some of my friends",
     photo: "./images/friends.jpg",
   },
   {
