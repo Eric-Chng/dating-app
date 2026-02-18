@@ -5,6 +5,8 @@ import { PROFILES } from "./profiles.js";
 const MAX_VISIBLE_CARDS = 3;
 const SWIPE_X_THRESHOLD = 110;
 const SUPER_LIKE_Y_THRESHOLD = -130;
+const GESTURE_SWIPE_ANIMATION_MS = 320;
+const BUTTON_SWIPE_ANIMATION_MS = 520;
 const STATS_STORAGE_KEY = "meSwipeStats:v1";
 const SESSION_STORAGE_KEY = "meSwipeSessionId:v1";
 const IG_SUBMIT_COOLDOWN_MS = 30_000;
@@ -364,7 +366,9 @@ function animateAndCommitSwipe(card, action, meta) {
   const outX = action === "like" ? window.innerWidth * 1.2 : action === "nope" ? -window.innerWidth * 1.2 : 0;
   const outY = action === "super_like" ? -window.innerHeight * 1.1 : meta.deltaY;
   const rotateDeg = action === "like" ? 24 : action === "nope" ? -24 : 0;
-  card.style.transition = "transform 320ms cubic-bezier(0.2, 0.9, 0.28, 1)";
+  const swipeDurationMs =
+    meta?.source === "gesture" ? GESTURE_SWIPE_ANIMATION_MS : BUTTON_SWIPE_ANIMATION_MS;
+  card.style.transition = `transform ${swipeDurationMs}ms cubic-bezier(0.2, 0.9, 0.28, 1)`;
   card.style.transform = `translate(${outX}px, ${outY}px) rotate(${rotateDeg}deg)`;
 
   const profileId = card.dataset.profileId;
@@ -377,7 +381,7 @@ function animateAndCommitSwipe(card, action, meta) {
     if (profileId) {
       void trackSwipe(profileId, action, meta);
     }
-  }, 260);
+  }, swipeDurationMs);
 }
 
 function restartDeck() {
