@@ -7,6 +7,7 @@ Supabase storage for:
 
 - Swipe event tracking
 - Instagram handle submissions (with optional message)
+- Referral code capture via URL query param (`?ref=yourcode`)
 
 ## 1) Add your photos
 
@@ -27,6 +28,8 @@ Example profile entry:
 
 1. Create a Supabase project.
 2. Open SQL Editor and run `supabase/schema.sql`.
+   - If you already ran an older version, run it again. It includes `alter table`
+     statements for safe updates.
 3. Go to `Project Settings -> API` and copy:
    - Project URL
    - anon public key
@@ -40,6 +43,17 @@ export const APP_CONFIG = {
 ```
 
 Without config, the app still runs visually but storage calls are disabled.
+
+## Referral links
+
+Share links like:
+
+`https://<your-username>.github.io/<repo-name>/?ref=friend123`
+
+When a visitor opens the link:
+
+- They get a popup: "You've been referred to DateEric by friend123."
+- `referral_code` is saved with swipe events and Instagram submissions.
 
 ## 3) Run locally
 

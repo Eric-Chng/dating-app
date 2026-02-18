@@ -6,6 +6,7 @@ create table if not exists public.swipe_events (
   session_id text not null,
   profile_id text not null,
   action text not null check (action in ('like', 'nope', 'super_like')),
+  referral_code text,
   client_created_at timestamptz,
   source_url text,
   user_agent text,
@@ -23,6 +24,7 @@ create table if not exists public.instagram_submissions (
   session_id text not null,
   instagram_handle text not null
     check (instagram_handle ~ '^[A-Za-z0-9._]{1,30}$'),
+  referral_code text,
   message text,
   consent boolean not null default false,
   source_url text,
@@ -31,6 +33,12 @@ create table if not exists public.instagram_submissions (
 );
 
 -- For existing projects that created the earlier schema version.
+alter table public.swipe_events
+  add column if not exists referral_code text;
+
+alter table public.instagram_submissions
+  add column if not exists referral_code text;
+
 alter table public.instagram_submissions
   add column if not exists message text;
 

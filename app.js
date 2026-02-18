@@ -10,6 +10,7 @@ const SESSION_STORAGE_KEY = "meSwipeSessionId:v1";
 const IG_SUBMIT_COOLDOWN_MS = 30_000;
 const MIN_PAGE_AGE_FOR_SUBMIT_MS = 3_000;
 const INVALID_MESSAGE_SENTINEL = "__INVALID_MESSAGE__";
+const REFERRAL_QUERY_PARAM = "ref";
 
 const deckEl = document.querySelector("#deck");
 const emptyStateEl = document.querySelector("#emptyState");
@@ -28,6 +29,9 @@ const consentInput = document.querySelector("#consent");
 const honeypotInput = document.querySelector("#websiteField");
 const submitInstagramBtn = document.querySelector("#submitInstagramBtn");
 const formMessageEl = document.querySelector("#formMessage");
+const referralModalEl = document.querySelector("#referralModal");
+const referralModalMessageEl = document.querySelector("#referralModalMessage");
+const closeReferralModalBtn = document.querySelector("#closeReferralModalBtn");
 
 const swipeButtons = document.querySelectorAll("[data-action]");
 
@@ -38,6 +42,8 @@ const state = {
   sessionId: getOrCreateSessionId(),
   loadedAtMs: Date.now(),
   lastInstagramSubmitAtMs: 0,
+  referralCode: getReferralCodeFromUrl(),
+  isReferralModalOpen: false,
   stats: loadStats(),
   supabaseClient: null,
 };
@@ -48,8 +54,10 @@ function init() {
   state.supabaseClient = initSupabaseClient();
   attachButtonHandlers();
   attachKeyboardShortcuts();
+  attachReferralModalHandlers();
   attachFormHandler();
   restartDeckBtn.addEventListener("click", restartDeck);
+  maybeShowReferralModal();
   renderStats();
   renderDeck();
 }
@@ -91,6 +99,12 @@ function attachButtonHandlers() {
 
 function attachKeyboardShortcuts() {
   window.addEventListener("keydown", (event) => {
+    if (state.isReferralModalOpen) {
+      if (event.key === "Escape") {
+        hideReferralModal();
+      }
+      return;
+    }
     if (event.target instanceof HTMLInputElement) {
       return;
     }
@@ -102,6 +116,42 @@ function attachKeyboardShortcuts() {
       triggerSwipe("super_like", "keyboard");
     }
   });
+}
+
+function attachReferralModalHandlers() {
+  if (!referralModalEl || !closeReferralModalBtn) {
+    return;
+  }
+  closeReferralModalBtn.addEventListener("click", hideReferralModal);
+  referralModalEl.addEventListener("click", (event) => {
+    if (event.target === referralModalEl) {
+      hideReferralModal();
+    }
+  });
+}
+
+function maybeShowReferralModal() {
+  if (!state.referralCode || !referralModalEl || !referralModalMessageEl) {
+    return;
+  }
+  referralModalMessageEl.textContent = `You've been referred to DateEric by ${state.referralCode}.`;
+  referralModalEl.classList.remove("hidden");
+  document.body.classList.add("modal-open");
+  state.isReferralModalOpen = true;
+  if (closeReferralModalBtn) {
+    window.setTimeout(() => {
+      closeReferralModalBtn.focus();
+    }, 0);
+  }
+}
+
+function hideReferralModal() {
+  if (!referralModalEl) {
+    return;
+  }
+  referralModalEl.classList.add("hidden");
+  document.body.classList.remove("modal-open");
+  state.isReferralModalOpen = false;
 }
 
 function renderDeck() {
@@ -412,13 +462,19 @@ async function trackSwipe(profileId, action, meta = {}) {
     session_id: state.sessionId,
     profile_id: profileId,
     action,
+    referral_code: state.referralCode,
     client_created_at: new Date().toISOString(),
     user_agent: navigator.userAgent,
     source_url: window.location.href,
     meta,
   };
 
-  const { error } = await state.supabaseClient.from("swipe_events").insert(payload);
+  let { error } = await state.supabaseClient.from("swipe_events").insert(payload);
+  if (error && isMissingReferralColumnError(error)) {
+    const fallbackPayload = { ...payload };
+    delete fallbackPayload.referral_code;
+    ({ error } = await state.supabaseClient.from("swipe_events").insert(fallbackPayload));
+  }
   if (error) {
     console.error("Failed to store swipe event.", error);
     setBackendStatus("Backend status: error writing swipe event (check SQL + RLS)");
@@ -491,12 +547,18 @@ async function persistInstagramSubmission({ instagram_handle, message }) {
     session_id: state.sessionId,
     instagram_handle,
     message,
+    referral_code: state.referralCode,
     consent: true,
     user_agent: navigator.userAgent,
     source_url: window.location.href,
   };
 
-  const { error } = await state.supabaseClient.from("instagram_submissions").insert(payload);
+  let { error } = await state.supabaseClient.from("instagram_submissions").insert(payload);
+  if (error && isMissingReferralColumnError(error)) {
+    const fallbackPayload = { ...payload };
+    delete fallbackPayload.referral_code;
+    ({ error } = await state.supabaseClient.from("instagram_submissions").insert(fallbackPayload));
+  }
   if (error) {
     setBackendStatus("Backend status: error writing IG submission (check SQL + RLS)");
     throw error;
@@ -533,6 +595,27 @@ function cleanOptionalMessage(rawValue) {
     return INVALID_MESSAGE_SENTINEL;
   }
   return value;
+}
+
+function getReferralCodeFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  return normalizeReferralCode(params.get(REFERRAL_QUERY_PARAM));
+}
+
+function normalizeReferralCode(rawValue) {
+  if (!rawValue) {
+    return null;
+  }
+  const trimmed = rawValue.trim();
+  if (!trimmed) {
+    return null;
+  }
+  return /^[a-z0-9._-]{1,40}$/i.test(trimmed) ? trimmed : null;
+}
+
+function isMissingReferralColumnError(error) {
+  const details = `${error?.message ?? ""} ${error?.details ?? ""} ${error?.hint ?? ""}`.toLowerCase();
+  return details.includes("referral_code");
 }
 
 function getOrCreateSessionId() {
