@@ -77,15 +77,15 @@
             autocomplete="off"
           />
 
-          <label for="displayName">Your name (optional)</label>
-          <input
-            id="displayName"
-            name="displayName"
-            type="text"
-            placeholder="What should I call you?"
-            maxlength="80"
-            autocomplete="off"
-          />
+          <label for="message">Message for me (optional)</label>
+          <textarea
+            id="message"
+            name="message"
+            placeholder="Shoot your shot..."
+            maxlength="500"
+            rows="4"
+          ></textarea>
+          <p class="field-hint">Max 500 characters.</p>
 
           <div class="consent-row">
             <input id="consent" name="consent" type="checkbox" required />

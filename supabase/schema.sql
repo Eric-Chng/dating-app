@@ -23,12 +23,22 @@ create table if not exists public.instagram_submissions (
   session_id text not null,
   instagram_handle text not null
     check (instagram_handle ~ '^[A-Za-z0-9._]{1,30}$'),
-  display_name text,
+  message text,
   consent boolean not null default false,
   source_url text,
   user_agent text,
   created_at timestamptz not null default now()
 );
+
+-- For existing projects that created the earlier schema version.
+alter table public.instagram_submissions
+  add column if not exists message text;
+
+alter table public.instagram_submissions
+  drop constraint if exists instagram_submissions_message_len_chk;
+alter table public.instagram_submissions
+  add constraint instagram_submissions_message_len_chk
+  check (message is null or char_length(message) <= 500);
 
 create index if not exists instagram_submissions_created_at_idx
   on public.instagram_submissions (created_at desc);

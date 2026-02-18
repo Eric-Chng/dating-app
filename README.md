@@ -6,7 +6,7 @@ This project is static-first for GitHub Pages (HTML/CSS/JS), with optional
 Supabase storage for:
 
 - Swipe event tracking
-- Instagram handle submissions
+- Instagram handle submissions (with optional message)
 
 ## 1) Add your photos
 

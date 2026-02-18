@@ -9,6 +9,7 @@ const STATS_STORAGE_KEY = "meSwipeStats:v1";
 const SESSION_STORAGE_KEY = "meSwipeSessionId:v1";
 const IG_SUBMIT_COOLDOWN_MS = 30_000;
 const MIN_PAGE_AGE_FOR_SUBMIT_MS = 3_000;
+const INVALID_MESSAGE_SENTINEL = "__INVALID_MESSAGE__";
 
 const deckEl = document.querySelector("#deck");
 const emptyStateEl = document.querySelector("#emptyState");
@@ -22,7 +23,7 @@ const statIgSubmissionsEl = document.querySelector("#statIgSubmissions");
 
 const instagramForm = document.querySelector("#instagramForm");
 const instagramHandleInput = document.querySelector("#instagramHandle");
-const displayNameInput = document.querySelector("#displayName");
+const messageInput = document.querySelector("#message");
 const consentInput = document.querySelector("#consent");
 const honeypotInput = document.querySelector("#websiteField");
 const submitInstagramBtn = document.querySelector("#submitInstagramBtn");
@@ -451,6 +452,12 @@ function attachFormHandler() {
       return;
     }
 
+    const optionalMessage = cleanOptionalMessage(messageInput.value);
+    if (optionalMessage === INVALID_MESSAGE_SENTINEL) {
+      setFormMessage("Message is too long (max 500 characters).", "error");
+      return;
+    }
+
     if (!consentInput.checked) {
       setFormMessage("Consent is required before submitting.", "error");
       return;
@@ -460,11 +467,11 @@ function attachFormHandler() {
     try {
       await persistInstagramSubmission({
         instagram_handle: normalizedHandle,
-        display_name: cleanOptionalValue(displayNameInput.value),
+        message: optionalMessage,
       });
       state.lastInstagramSubmitAtMs = Date.now();
       incrementIgSubmissionsStat();
-      setFormMessage("Saved. If I match with me for you, I might reach out.", "success");
+      setFormMessage("Saved your handle. Message received.", "success");
       instagramForm.reset();
     } catch (error) {
       console.error("Failed to submit Instagram data.", error);
@@ -475,7 +482,7 @@ function attachFormHandler() {
   });
 }
 
-async function persistInstagramSubmission({ instagram_handle, display_name }) {
+async function persistInstagramSubmission({ instagram_handle, message }) {
   if (!state.supabaseClient) {
     throw new Error("Supabase is not configured.");
   }
@@ -483,7 +490,7 @@ async function persistInstagramSubmission({ instagram_handle, display_name }) {
   const payload = {
     session_id: state.sessionId,
     instagram_handle,
-    display_name,
+    message,
     consent: true,
     user_agent: navigator.userAgent,
     source_url: window.location.href,
@@ -517,9 +524,15 @@ function normalizeInstagramHandle(rawValue) {
   return valid ? cleaned : "";
 }
 
-function cleanOptionalValue(rawValue) {
+function cleanOptionalMessage(rawValue) {
   const value = rawValue.trim();
-  return value.length > 0 ? value : null;
+  if (value.length === 0) {
+    return null;
+  }
+  if (value.length > 500) {
+    return INVALID_MESSAGE_SENTINEL;
+  }
+  return value;
 }
 
 function getOrCreateSessionId() {

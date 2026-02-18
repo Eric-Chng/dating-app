@@ -294,6 +294,22 @@ body {
   color: var(--text);
 }
 
+.instagram-form textarea {
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 10px;
+  padding: 0.65rem 0.72rem;
+  background: #020617;
+  color: var(--text);
+  resize: vertical;
+  min-height: 90px;
+}
+
+.field-hint {
+  margin: -0.2rem 0 0.3rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
 .consent-row {
   display: flex;
   align-items: flex-start;
