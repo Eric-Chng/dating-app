@@ -19,14 +19,32 @@ export const PROFILES = [
   },
   {
     id: "friends-1",
-    name: "friends.jpg",
-    bio: "here's a nice photo of some of my friends",
-    photo: "./images/friends.jpg",
+    name: "Graduation",
+    bio: "Grad photos with my friends",
+    photo: "./images/grad.jpg",
   },
   {
     id: "me-3",
     name: "pizza.jpg",
     bio: "i love food man",
     photo: "./images/pizza.jpg",
+  },
+  {
+    id: "friends-2",
+    name: "friends.jpg",
+    bio: "here's a nice photo of some of my friends",
+    photo: "./images/friends.jpg",
+  },
+  {
+    id: "me-5",
+    name: "Lilies",
+    bio: "Lilies are my favorite flower",
+    photo: "./images/lilies.jpg",
+  },
+  {
+    id: "friends-3",
+    name: "Friends 2.0",
+    bio: "I got asian glow :(",
+    photo: "./images/party.jpg",
   },
 ];
